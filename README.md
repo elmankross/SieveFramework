@@ -60,3 +60,4 @@ var result = provider.Apply(query, sieve);
 - [ ] ASP.NET Core abstractions with request's query builder
 - [ ] Supports nested models
 - [ ] Intergation with Swagger API docs
+- [ ] Cache expressions 
