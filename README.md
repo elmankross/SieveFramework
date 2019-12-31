@@ -31,22 +31,22 @@ provider.AddModel<TestModel>(builder => {
 // model contains information what to do with model: filter, sort, take, skip
 var sieve = new Sieve<TestModel>
 {
-   Filters = new List<IFilter<SimpleTestModel>>
+   Filters = new List<IFilter<TestModel>>
    {
-      new SimpleFilter<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
+      new SimpleFilter<TestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
    },
    Sorts = new List<Sort>
    {
-      new Sort<SimpleTestModel, int>(model => model.Number, SortDirection.Ascending)
+      new Sort<TestModel, int>(model => model.Number, SortDirection.Ascending)
    }
 };
 
 // what resource needs to process with sieve
 var query = new []
 {
-   new SimpleTestModel {Number = 2, Boolean = true},
-   new SimpleTestModel {Number = 3, Boolean = false},
-   new SimpleTestModel {Number = 1, Boolean = true}
+   new TestModel {Number = 2, Boolean = true},
+   new TestModel {Number = 3, Boolean = false},
+   new TestModel {Number = 1, Boolean = true}
 }.AsQueryable();
 
 // result of sieve processing
