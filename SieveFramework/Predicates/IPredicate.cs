@@ -3,8 +3,9 @@ using SieveFramework.Providers;
 
 namespace SieveFramework.Predicates
 {
-    public interface IPredicate
+    public interface IPredicate<TResource>
+        where TResource : class
     {
-        IQueryable<TResource> Apply<TResource>(ModelProvider provider, IQueryable<TResource> query) where TResource : class;
+        IQueryable<TResource> Apply(ModelProvider provider, IQueryable<TResource> query);
     }
 }

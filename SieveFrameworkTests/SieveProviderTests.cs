@@ -24,11 +24,11 @@ namespace SieveFrameworkTests
                 new SimpleTestModel {Boolean = false},
                 new SimpleTestModel {Boolean = true}
             }.AsQueryable();
-            var filterPredicate = new FilterPredicate(
-                new SimpleFilter<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
+            var filterPredicate = new FilterPredicate<SimpleTestModel>(
+                new SimpleFilterPipeline<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
             );
 
-            var result = provider.Apply(query, new IPredicate[] { filterPredicate }).ToList();
+            var result = provider.Apply(query, new[] { filterPredicate }).ToList();
 
             Assert.All(result, r => Assert.True(r.Boolean));
         }
@@ -44,13 +44,13 @@ namespace SieveFrameworkTests
                 new SimpleTestModel {Boolean = false},
                 new SimpleTestModel {Boolean = true}
             }.AsQueryable();
-            var filterPredicate = new FilterPredicate(
-                new SimpleFilter<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
+            var filterPredicate = new FilterPredicate<SimpleTestModel>(
+                new SimpleFilterPipeline<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
             );
 
             Assert.Throws<ArgumentException>(() =>
             {
-                provider.Apply(query, new IPredicate[] { filterPredicate });
+                provider.Apply(query, new[] { filterPredicate });
             });
         }
 
@@ -68,9 +68,11 @@ namespace SieveFrameworkTests
                 new SimpleTestModel {Boolean = false},
                 new SimpleTestModel {Boolean = true}
             }.AsQueryable();
-            var filterPredicate = new FilterPredicate(new ComplexFilter(ComplexFilterOperation.And, new IFilter[0]));
+            var filterPredicate = new FilterPredicate<SimpleTestModel>(
+                new ComplexFilter<SimpleTestModel>(ComplexFilterOperation.And, new IFilterPipeline<SimpleTestModel>[0])
+                );
 
-            var result = provider.Apply(query, new IPredicate[] { filterPredicate }).ToList();
+            var result = provider.Apply(query, new[] { filterPredicate }).ToList();
 
             Assert.Equal(2, result.Count);
         }
@@ -91,17 +93,22 @@ namespace SieveFrameworkTests
                 new SimpleTestModel {Boolean = true, Number = 2},
                 new SimpleTestModel {Boolean = true, Number = 3}
             }.AsQueryable();
-            var filterPredicate = new FilterPredicate(new ComplexFilter(ComplexFilterOperation.Or, new IFilter[]
-            {
-                new ComplexFilter(ComplexFilterOperation.And, new IFilter[]
+            var filterPredicate = new FilterPredicate<SimpleTestModel>(new ComplexFilter<SimpleTestModel>(
+                ComplexFilterOperation.Or, new IFilterPipeline<SimpleTestModel>[]
                 {
-                    new SimpleFilter<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true),
-                    new SimpleFilter<SimpleTestModel, int>(model => model.Number, SimpleFilterOperation.Equal, 3),
-                }),
-                new SimpleFilter<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, false)
-            }));
+                    new ComplexFilter<SimpleTestModel>(ComplexFilterOperation.And,
+                        new IFilterPipeline<SimpleTestModel>[]
+                        {
+                            new SimpleFilterPipeline<SimpleTestModel, bool>(model => model.Boolean,
+                                SimpleFilterOperation.Equal, true),
+                            new SimpleFilterPipeline<SimpleTestModel, int>(model => model.Number,
+                                SimpleFilterOperation.Equal, 3),
+                        }),
+                    new SimpleFilterPipeline<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal,
+                        false)
+                }));
 
-            var result = provider.Apply(query, new IPredicate[] { filterPredicate }).ToList();
+            var result = provider.Apply(query, new[] { filterPredicate }).ToList();
 
             Assert.Equal(2, result.Count);
             Assert.Single(result, model => model.Boolean == true && model.Number == 3);
@@ -123,11 +130,11 @@ namespace SieveFrameworkTests
                 new SimpleTestModel {Number = 3},
                 new SimpleTestModel {Number = 1}
             }.AsQueryable();
-            var sortPredicate = new SortPredicate(
-                new Sort<SimpleTestModel, int>(model => model.Number, SortDirection.Descending)
+            var sortPredicate = new SortPredicate<SimpleTestModel>(
+                new SortPipeline<SimpleTestModel, int>(model => model.Number, SortDirection.Descending)
             );
 
-            var result = provider.Apply(query, new IPredicate[] { sortPredicate }).ToList();
+            var result = provider.Apply(query, new[] { sortPredicate }).ToList();
 
             Assert.Collection(result,
                 r => Assert.Equal(3, r.Number),
@@ -147,13 +154,13 @@ namespace SieveFrameworkTests
                 new SimpleTestModel {Number = 3},
                 new SimpleTestModel {Number = 1}
             }.AsQueryable();
-            var sortPredicate = new SortPredicate(
-                new Sort<SimpleTestModel, int>(model => model.Number, SortDirection.Descending)
+            var sortPredicate = new SortPredicate<SimpleTestModel>(
+                new SortPipeline<SimpleTestModel, int>(model => model.Number, SortDirection.Descending)
             );
 
             Assert.Throws<ArgumentException>(() =>
             {
-                provider.Apply(query, new IPredicate[] { sortPredicate });
+                provider.Apply(query, new[] { sortPredicate });
             });
         }
 
@@ -175,13 +182,13 @@ namespace SieveFrameworkTests
             }.AsQueryable();
             var sieve = new Sieve<SimpleTestModel>
             {
-                Filters = new List<IFilter<SimpleTestModel>>
+                Filters = new List<IFilterPipeline<SimpleTestModel>>
                 {
-                    new SimpleFilter<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
+                    new SimpleFilterPipeline<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
                 },
-                Sorts = new List<Sort>
+                Sorts = new List<ISortPipeline<SimpleTestModel>>
                 {
-                    new Sort<SimpleTestModel, int>(model => model.Number, SortDirection.Ascending)
+                    new SortPipeline<SimpleTestModel, int>(model => model.Number, SortDirection.Ascending)
                 }
             };
 
@@ -205,9 +212,9 @@ namespace SieveFrameworkTests
             }.AsQueryable();
             var sieve = new Sieve<SimpleTestModel>
             {
-                Filters = new List<IFilter<SimpleTestModel>>
+                Filters = new List<IFilterPipeline<SimpleTestModel>>
                 {
-                    new SimpleFilter<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
+                    new SimpleFilterPipeline<SimpleTestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
                 }
             };
 

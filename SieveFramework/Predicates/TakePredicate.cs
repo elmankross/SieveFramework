@@ -3,7 +3,8 @@ using SieveFramework.Providers;
 
 namespace SieveFramework.Predicates
 {
-    public class TakePredicate : IPredicate
+    public class TakePredicate<TResource> : IPredicate<TResource>
+        where TResource : class
     {
         private readonly int _take;
 
@@ -12,7 +13,7 @@ namespace SieveFramework.Predicates
             _take = take;
         }
 
-        public IQueryable<TResource> Apply<TResource>(ModelProvider _, IQueryable<TResource> query) where TResource : class
+        public IQueryable<TResource> Apply(ModelProvider _, IQueryable<TResource> query)
         {
             return query.Take(_take);
         }

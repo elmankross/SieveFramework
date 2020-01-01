@@ -28,11 +28,21 @@ namespace SieveFramework.Providers
         {
             var provider = new ModelProvider<TModel>();
             builder(provider);
-            if (!Providers.TryAdd(typeof(TModel).Name, provider))
-            {
-                throw new Exception("Can't add new provider. It seems this provider already added");
-            }
-            return this;
+            return AddProvider(provider);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public SieveProvider AddModel(Type type, Action<ModelProvider> builder)
+        {
+            var provider = new ModelProvider(type);
+            builder(provider);
+            return AddProvider(provider);
         }
 
 
@@ -57,7 +67,7 @@ namespace SieveFramework.Providers
         /// <param name="query"></param>
         /// <param name="predicates"></param>
         /// <returns></returns>
-        public IQueryable<TResource> Apply<TResource>(IQueryable<TResource> query, IReadOnlyList<IPredicate> predicates)
+        public IQueryable<TResource> Apply<TResource>(IQueryable<TResource> query, IReadOnlyList<IPredicate<TResource>> predicates)
             where TResource : class
         {
             if (!Providers.TryGetValue(typeof(TResource).Name, out var provider))
@@ -71,6 +81,22 @@ namespace SieveFramework.Providers
             }
 
             return query;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <returns></returns>
+        private SieveProvider AddProvider(ModelProvider provider)
+        {
+            if (!Providers.TryAdd(provider.Target.Type.Name, provider))
+            {
+                throw new Exception("Can't add new provider. It seems this provider already added");
+            }
+
+            return this;
         }
     }
 }

@@ -3,7 +3,8 @@ using SieveFramework.Providers;
 
 namespace SieveFramework.Predicates
 {
-    public class SkipPredicate : IPredicate
+    public class SkipPredicate<TResource> : IPredicate<TResource>
+        where TResource : class
     {
         private readonly int _skip;
 
@@ -12,7 +13,7 @@ namespace SieveFramework.Predicates
             _skip = skip;
         }
 
-        public IQueryable<TResource> Apply<TResource>(ModelProvider _, IQueryable<TResource> query) where TResource : class
+        public IQueryable<TResource> Apply(ModelProvider _, IQueryable<TResource> query)
         {
             return query.Skip(_skip);
         }

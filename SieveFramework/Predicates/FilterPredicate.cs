@@ -6,19 +6,19 @@ using SieveFramework.Providers;
 
 namespace SieveFramework.Predicates
 {
-    public class FilterPredicate : IPredicate
+    public class FilterPredicate<TResource> : IPredicate<TResource>
+        where TResource : class
     {
-        private readonly IFilter[] _filters;
+        private readonly IFilterPipeline<TResource>[] _filters;
 
-        public FilterPredicate(params IFilter[] filters)
+        public FilterPredicate(params IFilterPipeline<TResource>[] filters)
         {
             _filters = filters;
         }
 
 
         /// <inheritdoc />
-        public IQueryable<TResource> Apply<TResource>(ModelProvider provider, IQueryable<TResource> query)
-            where TResource : class
+        public IQueryable<TResource> Apply(ModelProvider provider, IQueryable<TResource> query)
         {
             foreach (var filter in _filters)
             {

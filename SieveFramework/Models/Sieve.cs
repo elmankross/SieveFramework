@@ -6,27 +6,27 @@ namespace SieveFramework.Models
     public class Sieve<TResource>
         where TResource : class
     {
-        public List<IFilter<TResource>> Filters { get; set; }
-        public List<Sort> Sorts { get; set; }
+        public List<IFilterPipeline<TResource>> Filters { get; set; }
+        public List<ISortPipeline<TResource>> Sorts { get; set; }
         public int Take { get; set; } = 100;
         public int Skip { get; set; }
 
 
         public Sieve()
         {
-            Filters = new List<IFilter<TResource>>(0);
-            Sorts = new List<Sort>(0);
+            Filters = new List<IFilterPipeline<TResource>>(0);
+            Sorts = new List<ISortPipeline<TResource>>(0);
         }
 
 
-        internal IPredicate[] GetPredicates()
+        internal IPredicate<TResource>[] GetPredicates()
         {
-            return new IPredicate[]
+            return new IPredicate<TResource>[]
             {
-                new FilterPredicate(Filters.ToArray()),
-                new SortPredicate(Sorts.ToArray()),
-                new SkipPredicate(Skip),
-                new TakePredicate(Take)
+                new FilterPredicate<TResource>(Filters.ToArray()),
+                new SortPredicate<TResource>(Sorts.ToArray()),
+                new SkipPredicate<TResource>(Skip),
+                new TakePredicate<TResource>(Take)
             };
         }
     }

@@ -4,13 +4,12 @@ using System.Reflection;
 
 namespace SieveFramework.Models
 {
-    public interface IFilter<TResource> : IFilter
+    public interface IPipeline<TResource> : IPipeline
         where TResource : class
     {
-
     }
 
-    public interface IFilter
+    public interface IPipeline
     {
         /// <summary>
         /// Apply filter to expression
