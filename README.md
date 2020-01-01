@@ -56,7 +56,7 @@ var result = provider.Apply(query, sieve);
 
 # Roadmap
 - [X] Basic implementations and abstractions
-- [ ] Attribute model's binding  
+- [X] Attribute model's binding  
 - [ ] ASP.NET Core abstractions with request's query builder
 - [ ] Supports nested models
 - [ ] Intergation with Swagger API docs
