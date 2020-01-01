@@ -22,22 +22,29 @@ namespace SieveFramework.Models
         Descending
     }
 
-
     /// <summary>
     /// 
     /// </summary>
     /// <typeparam name="TResource"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    public class SortPipeline<TResource, TValue> : ISortPipeline<TResource>
+    public class SortPipeline<TResource, TValue> : SortPipeline<TResource>
+        where TResource : class
+    {
+        public SortPipeline(Expression<Func<TResource, TValue>> property, SortDirection direction)
+            : base(((MemberExpression) property.Body).Member.Name, direction) { }
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TResource"></typeparam>
+    public class SortPipeline<TResource> : ISortPipeline<TResource>
         where TResource : class
     {
         public string Property { get; }
         public SortDirection Direction { get; }
 
-        public SortPipeline(Expression<Func<TResource, TValue>> property, SortDirection direction)
-            : this(((MemberExpression)property.Body).Member.Name, direction)
-        {
-        }
 
         public SortPipeline(string property, SortDirection direction)
         {

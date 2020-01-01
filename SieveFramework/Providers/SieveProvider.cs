@@ -7,7 +7,27 @@ using SieveFramework.Predicates;
 
 namespace SieveFramework.Providers
 {
-    public class SieveProvider
+    /// <summary>
+    /// 
+    /// </summary>
+    public interface ISieveProvider
+    {
+        /// <summary>
+        /// Apply filter to resource
+        /// </summary>
+        /// <typeparam name="TResource"></typeparam>
+        /// <param name="query"></param>
+        /// <param name="sieve"></param>
+        /// <returns></returns>
+        IQueryable<TResource> Apply<TResource>(IQueryable<TResource> query, Sieve<TResource> sieve)
+            where TResource : class;
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class SieveProvider : ISieveProvider
     {
         internal ConcurrentDictionary<string, ModelProvider> Providers { get; }
 

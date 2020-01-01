@@ -5,16 +5,16 @@ using SieveFramework.Attributes;
 
 namespace SieveFramework.Providers
 {
-    public class AttributeBindingsProvider
+    public class SieveConfiguratorProvider
     {
         private readonly Assembly[] _assemblies;
 
-        public AttributeBindingsProvider()
+        public SieveConfiguratorProvider()
             : this(AppDomain.CurrentDomain.GetAssemblies().Where(a => !a.GlobalAssemblyCache).ToArray())
         {
         }
 
-        public AttributeBindingsProvider(params Assembly[] assemblies)
+        public SieveConfiguratorProvider(params Assembly[] assemblies)
         {
             _assemblies = assemblies;
         }
@@ -25,7 +25,7 @@ namespace SieveFramework.Providers
         /// </summary>
         /// <param name="sieveProvider"></param>
         /// <returns></returns>
-        public void FillSieveProvider(SieveProvider sieveProvider)
+        public void Configure(SieveProvider sieveProvider)
         {
             var types = _assemblies.SelectMany(a => a.GetTypes().Where(t => t.IsClass && t.IsPublic))
                                    .Distinct()

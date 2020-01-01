@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SieveFramework.AspNetCore\SieveFramework.AspNetCore.csproj" />
     <ProjectReference Include="..\SieveFramework\SieveFramework.csproj" />
   </ItemGroup>
 

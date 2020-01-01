@@ -8,14 +8,14 @@ using Xunit;
 
 namespace SieveFrameworkTests
 {
-    public class AttributeBindingsProviderTests
+    public class SieveConfiguratorProviderTests
     {
         [Fact]
         public void SieveProvider__FromAssembly__ShouldConstructCorrectly()
         {
-            var attributeProvider = new AttributeBindingsProvider(typeof(AttributeBindingsProviderTests).Assembly);
+            var attributeProvider = new SieveConfiguratorProvider(typeof(SieveConfiguratorProviderTests).Assembly);
             var sieveProvider = new SieveProvider();
-            attributeProvider.FillSieveProvider(sieveProvider);
+            attributeProvider.Configure(sieveProvider);
 
             var query = new[]
             {
@@ -37,9 +37,9 @@ namespace SieveFrameworkTests
         [Fact]
         public void SieveProvider__FromAssembly__WithIncorrectProperty__ShouldThrowException()
         {
-            var attributeProvider = new AttributeBindingsProvider(typeof(AttributeBindingsProviderTests).Assembly);
+            var attributeProvider = new SieveConfiguratorProvider(typeof(SieveConfiguratorProviderTests).Assembly);
             var sieveProvider = new SieveProvider();
-            attributeProvider.FillSieveProvider(sieveProvider);
+            attributeProvider.Configure(sieveProvider);
 
             var query = new[]
             {

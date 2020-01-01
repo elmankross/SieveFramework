@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SieveFramework", "SieveFram
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SieveFrameworkTests", "SieveFrameworkTests\SieveFrameworkTests.csproj", "{D40C9F0A-BD5A-45D8-A5F0-FC8AFBF2EDA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SieveFramework.AspNetCore", "SieveFramework.AspNetCore\SieveFramework.AspNetCore.csproj", "{FDF3929D-BE70-40B3-836A-51A8E541F942}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D40C9F0A-BD5A-45D8-A5F0-FC8AFBF2EDA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D40C9F0A-BD5A-45D8-A5F0-FC8AFBF2EDA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D40C9F0A-BD5A-45D8-A5F0-FC8AFBF2EDA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDF3929D-BE70-40B3-836A-51A8E541F942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDF3929D-BE70-40B3-836A-51A8E541F942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDF3929D-BE70-40B3-836A-51A8E541F942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDF3929D-BE70-40B3-836A-51A8E541F942}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

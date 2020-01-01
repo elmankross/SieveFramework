@@ -8,13 +8,12 @@ namespace SieveFramework.Models
     /// 
     /// </summary>
     /// <typeparam name="TResource"></typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    public interface ISimpleFilterPipeline<TResource, out TValue> : IFilterPipeline<TResource>
+    public interface ISimpleFilterPipeline<TResource> : IFilterPipeline<TResource>
         where TResource : class
     {
         string Property { get; }
         SimpleFilterOperation Operation { get; }
-        TValue Value { get; }
+        string Value { get; }
     }
 
 
@@ -63,12 +62,32 @@ namespace SieveFramework.Models
     /// </summary>
     /// <typeparam name="TResource"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    public class SimpleFilterPipeline<TResource, TValue> : ISimpleFilterPipeline<TResource, TValue>
+    public class SimpleFilterPipeline<TResource, TValue> : SimpleFilterPipeline<TResource>
+        where TResource : class
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="operation"></param>
+        /// <param name="value"></param>
+        public SimpleFilterPipeline(Expression<Func<TResource, TValue>> property,
+                                    SimpleFilterOperation operation,
+                                    TValue value
+        ) : base(((MemberExpression)property.Body).Member.Name, operation, value.ToString()) { }
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TResource"></typeparam>
+    public class SimpleFilterPipeline<TResource> : ISimpleFilterPipeline<TResource>
         where TResource : class
     {
         public string Property { get; }
         public SimpleFilterOperation Operation { get; }
-        public TValue Value { get; }
+        public string Value { get; }
 
 
         /// <summary>
@@ -77,9 +96,9 @@ namespace SieveFramework.Models
         /// <param name="property"></param>
         /// <param name="operation"></param>
         /// <param name="value"></param>
-        public SimpleFilterPipeline(Expression<Func<TResource, TValue>> property, SimpleFilterOperation operation, TValue value)
+        public SimpleFilterPipeline(string property, SimpleFilterOperation operation, string value)
         {
-            Property = ((MemberExpression)property.Body).Member.Name;
+            Property = property;
             Operation = operation;
             Value = value;
         }
@@ -107,7 +126,12 @@ namespace SieveFramework.Models
     }
 
 
-    public class ComplexFilter<TResource> : IComplexFilterPipeline<TResource>
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TResource"></typeparam>
+    public class ComplexFilterPipeline<TResource> : IComplexFilterPipeline<TResource>
         where TResource : class
     {
         public IFilterPipeline<TResource>[] Filters { get; }
@@ -119,7 +143,7 @@ namespace SieveFramework.Models
         /// </summary>
         /// <param name="filters"></param>
         /// <param name="operation"></param>
-        public ComplexFilter(ComplexFilterOperation operation, IFilterPipeline<TResource>[] filters)
+        public ComplexFilterPipeline(ComplexFilterOperation operation, IFilterPipeline<TResource>[] filters)
         {
             Filters = filters;
             Operation = operation;
