@@ -49,10 +49,10 @@ namespace SieveFramework.Providers
     /// </summary>
     public class ModelProvider
     {
-        internal readonly ParameterExpression Target;
-        internal readonly Dictionary<string, PropertyInfo> Properties;
+        public readonly ParameterExpression Target;
         internal readonly HashSet<string> Filterable;
         internal readonly HashSet<string> Sortable;
+        internal readonly Dictionary<string, PropertyInfo> Properties;
 
         /// <summary>
         /// 
@@ -64,6 +64,26 @@ namespace SieveFramework.Providers
             Properties = new Dictionary<string, PropertyInfo>();
             Filterable = new HashSet<string>();
             Sortable = new HashSet<string>();
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetFilterableProperties()
+        {
+            return Filterable;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetSortableProperties()
+        {
+            return Sortable;
         }
 
 

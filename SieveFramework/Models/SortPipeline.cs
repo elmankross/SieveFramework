@@ -29,9 +29,10 @@ namespace SieveFramework.Models
     /// <typeparam name="TValue"></typeparam>
     public class SortPipeline<TResource, TValue> : SortPipeline<TResource>
         where TResource : class
+        where TValue : IConvertible
     {
         public SortPipeline(Expression<Func<TResource, TValue>> property, SortDirection direction)
-            : base(((MemberExpression) property.Body).Member.Name, direction) { }
+            : base(((MemberExpression)property.Body).Member.Name, direction) { }
     }
 
 

@@ -1,7 +1,5 @@
 ﻿using SieveFramework.AspNetCore.Providers;
-using SieveFramework.Exceptions;
 using SieveFramework.Models;
-using SieveFramework.Providers;
 using SieveFrameworkTests.Models;
 using Xunit;
 
@@ -18,14 +16,12 @@ namespace SieveFrameworkTests
 
 
         [Fact]
-        public void InvalidFilterOperation__ShouldThrowException()
+        public void UnknownQueryParameter__ShouldBePassed()
         {
-            var query = "invalid=";
+            var query = "unknown=";
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.Throws<InvalidFilterFormatException>(() =>
-            {
-                _provider.Parse<SimpleTestModel>(query);
-            });
+            Assert.True(result.Successful);
         }
 
 
@@ -33,12 +29,13 @@ namespace SieveFrameworkTests
         public void SimpleFilterString__ShouldBeParsed()
         {
             var query = "filter=Number~eq~1";
-            var sieve = _provider.Parse<SimpleTestModel>(query);
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.NotNull(sieve.Filter);
-            Assert.IsType<SimpleFilterPipeline<SimpleTestModel>>(sieve.Filter);
+            Assert.True(result.Successful);
+            Assert.NotNull(result.Result.Filter);
+            Assert.IsType<SimpleFilterPipeline<SimpleTestModel>>(result.Result.Filter);
 
-            var filter = sieve.Filter as SimpleFilterPipeline<SimpleTestModel>;
+            var filter = result.Result.Filter as SimpleFilterPipeline<SimpleTestModel>;
             Assert.Equal("1", filter.Value);
             Assert.Equal("Number", filter.Property);
             Assert.Equal(SimpleFilterOperation.Equal, filter.Operation);
@@ -49,12 +46,13 @@ namespace SieveFrameworkTests
         public void SimpleFilterString__WithAnd__ShouldBeParsed()
         {
             var query = "filter=Number~eq~1~and~Boolean~eq~true";
-            var sieve = _provider.Parse<SimpleTestModel>(query);
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.NotNull(sieve.Filter);
-            Assert.IsType<ComplexFilterPipeline<SimpleTestModel>>(sieve.Filter);
+            Assert.True(result.Successful);
+            Assert.NotNull(result.Result.Filter);
+            Assert.IsType<ComplexFilterPipeline<SimpleTestModel>>(result.Result.Filter);
 
-            var complex = sieve.Filter as ComplexFilterPipeline<SimpleTestModel>;
+            var complex = result.Result.Filter as ComplexFilterPipeline<SimpleTestModel>;
             Assert.Equal(ComplexFilterOperation.And, complex.Operation);
             Assert.NotEmpty(complex.Filters);
 
@@ -74,12 +72,13 @@ namespace SieveFrameworkTests
         public void SimpleFilterString__WithOr__ShouldBeParsed()
         {
             var query = "filter=Number~eq~1~or~Boolean~eq~true";
-            var sieve = _provider.Parse<SimpleTestModel>(query);
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.NotNull(sieve.Filter);
-            Assert.IsType<ComplexFilterPipeline<SimpleTestModel>>(sieve.Filter);
+            Assert.True(result.Successful);
+            Assert.NotNull(result.Result.Filter);
+            Assert.IsType<ComplexFilterPipeline<SimpleTestModel>>(result.Result.Filter);
 
-            var complex = sieve.Filter as ComplexFilterPipeline<SimpleTestModel>;
+            var complex = result.Result.Filter as ComplexFilterPipeline<SimpleTestModel>;
             Assert.Equal(ComplexFilterOperation.Or, complex.Operation);
             Assert.NotEmpty(complex.Filters);
 
@@ -99,10 +98,11 @@ namespace SieveFrameworkTests
         public void SortString__ShouldBeParsed()
         {
             var query = "sort=Number~asc~and~Boolean~desc";
-            var sieve = _provider.Parse<SimpleTestModel>(query);
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.NotEmpty(sieve.Sort);
-            Assert.Collection(sieve.Sort,
+            Assert.True(result.Successful);
+            Assert.NotEmpty(result.Result.Sort);
+            Assert.Collection(result.Result.Sort,
                 s =>
                 {
                     Assert.Equal("Number", s.Property);
@@ -120,9 +120,9 @@ namespace SieveFrameworkTests
         public void ValidTakeString__ShouldBeParsed()
         {
             var query = "take=999";
-            var sieve = _provider.Parse<SimpleTestModel>(query);
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.Equal(999, sieve.Take);
+            Assert.Equal(999, result.Result.Take);
         }
 
 
@@ -130,11 +130,9 @@ namespace SieveFrameworkTests
         public void InvalidTakeString__ShouldThrowException()
         {
             var query = "take=example";
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.Throws<InvalidFilterFormatException>(() =>
-            {
-                _provider.Parse<SimpleTestModel>(query);
-            });
+            Assert.False(result.Successful);
         }
 
 
@@ -142,9 +140,9 @@ namespace SieveFrameworkTests
         public void ValidSkipString__ShouldBeParsed()
         {
             var query = "skip=999";
-            var sieve = _provider.Parse<SimpleTestModel>(query);
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.Equal(999, sieve.Skip);
+            Assert.Equal(999, result.Result.Skip);
         }
 
 
@@ -152,11 +150,9 @@ namespace SieveFrameworkTests
         public void InvalidSkipString__ShouldThrowException()
         {
             var query = "skip=example";
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.Throws<InvalidFilterFormatException>(() =>
-            {
-                _provider.Parse<SimpleTestModel>(query);
-            });
+            Assert.False(result.Successful);
         }
 
 
@@ -164,12 +160,13 @@ namespace SieveFrameworkTests
         public void FilterWithOperations__ShouldBeParsed()
         {
             var query = "filter=&sort=&skip=&take=";
-            var sieve = _provider.Parse<SimpleTestModel>(query);
+            var result = _provider.TryParse<SimpleTestModel>(query);
 
-            Assert.Null(sieve.Filter);
-            Assert.Empty(sieve.Sort);
-            Assert.Equal(0, sieve.Skip);
-            Assert.Equal(100, sieve.Take);
+            Assert.True(result.Successful);
+            Assert.Null(result.Result.Filter);
+            Assert.Empty(result.Result.Sort);
+            Assert.Equal(0, result.Result.Skip);
+            Assert.Equal(100, result.Result.Take);
         }
     }
 }

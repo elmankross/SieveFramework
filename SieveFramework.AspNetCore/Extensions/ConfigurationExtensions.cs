@@ -1,8 +1,8 @@
-﻿using System;
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using SieveFramework.Attributes;
 using SieveFramework.Providers;
+using System;
+using System.Reflection;
 
 namespace SieveFramework.AspNetCore.Extensions
 {
@@ -17,16 +17,12 @@ namespace SieveFramework.AspNetCore.Extensions
         /// <returns></returns>
         public static IServiceCollection AddSieveProvider(this IServiceCollection services, params Assembly[] assemblies)
         {
-            services.AddSingleton(_ => assemblies.Length > 0
+            var configurator = assemblies.Length > 0
                 ? new SieveConfiguratorProvider(assemblies)
-                : new SieveConfiguratorProvider());
-            services.AddSingleton<ISieveProvider, SieveProvider>(s =>
-            {
-                var provider = new SieveProvider();
-                var configurator = s.GetService<SieveConfiguratorProvider>();
-                configurator.Configure(provider);
-                return provider;
-            });
+                : new SieveConfiguratorProvider();
+            var provider = new SieveProvider();
+            configurator.Configure(provider);
+            services.AddSingleton<ISieveProvider>(provider);
             return services;
         }
 
@@ -39,12 +35,9 @@ namespace SieveFramework.AspNetCore.Extensions
         /// <returns></returns>
         public static IServiceCollection AddSieveProvider(this IServiceCollection services, Action<SieveProvider> config)
         {
-            services.AddSingleton<ISieveProvider, SieveProvider>(_ =>
-            {
-                var provider = new SieveProvider();
-                config(provider);
-                return provider;
-            });
+            var provider = new SieveProvider();
+            config(provider);
+            services.AddSingleton<ISieveProvider>(provider);
             return services;
         }
     }

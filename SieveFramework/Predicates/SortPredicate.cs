@@ -23,7 +23,7 @@ namespace SieveFramework.Predicates
             {
                 if (provider.TrySort(sort.Property, out var property))
                 {
-                    var lambda = sort.Apply(provider.Target, p => null);
+                    var lambda = sort.Apply(provider.Target, _ => null);
                     var method = sort.Direction == SortDirection.Ascending
                         ? nameof(Queryable.OrderBy)
                         : nameof(Queryable.OrderByDescending);

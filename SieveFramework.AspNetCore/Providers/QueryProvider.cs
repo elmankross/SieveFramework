@@ -1,38 +1,38 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using SieveFramework.AspNetCore.Models;
-using SieveFramework.Exceptions;
 using SieveFramework.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SieveFramework.AspNetCore.Providers
 {
     /// <summary>
     /// 
     /// </summary>
-    internal class QueryAliases
+    public class QueryAliases
     {
-        internal const string NODE_DELIMITER = "~";
-        internal const string OPERATION_DELIMITER = "&";
-        internal const string FILTER = "filter=";
-        internal const string SORT = "sort=";
-        internal const string TAKE = "take=";
-        internal const string SKIP = "skip=";
+        public const string NODE_DELIMITER = "~";
+        public const string OPERATION_DELIMITER = "&";
+        public const string FILTER = "filter=";
+        public const string SORT = "sort=";
+        public const string TAKE = "take=";
+        public const string SKIP = "skip=";
 
-        internal const string AND = "~and~";
-        internal const string OR = "~or~";
+        public const string AND = "~and~";
+        public const string OR = "~or~";
 
-        internal const string ASC = "asc";
-        internal const string DESC = "desc";
+        public const string ASC = "asc";
+        public const string DESC = "desc";
 
-        internal const string EQUAL = "eq";
-        internal const string NOT_EQUAL = "neq";
-        internal const string GREATER_THAN = "gt";
-        internal const string GREATER_THAN_OR_EQUAL = "gte";
-        internal const string LESS_THAN = "lt";
-        internal const string LESS_THAN_OR_EQUAL = "lte";
+        public const string EQUAL = "eq";
+        public const string NOT_EQUAL = "neq";
+        public const string GREATER_THAN = "gt";
+        public const string GREATER_THAN_OR_EQUAL = "gte";
+        public const string LESS_THAN = "lt";
+        public const string LESS_THAN_OR_EQUAL = "lte";
 
 
-        internal static Dictionary<string, SimpleFilterOperation> OperationMappings = new Dictionary<string, SimpleFilterOperation>
+        public static Dictionary<string, SimpleFilterOperation> OperationMappings = new Dictionary<string, SimpleFilterOperation>
         {
             [EQUAL] = SimpleFilterOperation.Equal,
             [NOT_EQUAL] = SimpleFilterOperation.NotEqual,
@@ -42,7 +42,7 @@ namespace SieveFramework.AspNetCore.Providers
             [LESS_THAN_OR_EQUAL] = SimpleFilterOperation.LessOrEqual
         };
 
-        internal static Dictionary<string, SortDirection> SortDirectionMappings = new Dictionary<string, SortDirection>
+        public static Dictionary<string, SortDirection> SortDirectionMappings = new Dictionary<string, SortDirection>
         {
             [ASC] = SortDirection.Ascending,
             [DESC] = SortDirection.Descending
@@ -61,35 +61,63 @@ namespace SieveFramework.AspNetCore.Providers
         /// <typeparam name="TResource"></typeparam>
         /// <param name="query"></param>
         /// <returns></returns>
-        public Sieve<TResource> Parse<TResource>(string query)
+        public ParseResult<Sieve<TResource>> TryParse<TResource>(string query)
             where TResource : class
         {
             var model = new Sieve<TResource>();
             foreach (var node in query.Split(QueryAliases.OPERATION_DELIMITER))
             {
-                if (node.StartsWith(QueryAliases.FILTER))
+                if (node.StartsWith(QueryAliases.FILTER, StringComparison.OrdinalIgnoreCase))
                 {
-                    model.Filter = ParseFilter<TResource>(node.Substring(QueryAliases.FILTER.Length));
+                    var result = TryParseFilter<TResource>(node.Substring(QueryAliases.FILTER.Length));
+                    if (result.Successful)
+                    {
+                        model.Filter = result.Result;
+                    }
+                    else
+                    {
+                        return new ParseResult<Sieve<TResource>>(result.Errors);
+                    }
                 }
-                else if (node.StartsWith(QueryAliases.SORT))
+                else if (node.StartsWith(QueryAliases.SORT, StringComparison.OrdinalIgnoreCase))
                 {
-                    model.Sort = ParseSort<TResource>(node.Substring(QueryAliases.SORT.Length));
+                    var result = TryParseSort<TResource>(node.Substring(QueryAliases.SORT.Length));
+                    if (result.Successful)
+                    {
+                        model.Sort = result.Result;
+                    }
+                    else
+                    {
+                        return new ParseResult<Sieve<TResource>>(result.Errors);
+                    }
                 }
-                else if (node.StartsWith(QueryAliases.SKIP))
+                else if (node.StartsWith(QueryAliases.SKIP, StringComparison.OrdinalIgnoreCase))
                 {
-                    model.Skip = ParseConst(node.Substring(QueryAliases.SKIP.Length)) ?? model.Skip;
+                    var result = TryParseConst(node.Substring(QueryAliases.SKIP.Length));
+                    if (result.Successful)
+                    {
+                        model.Skip = result.Result ?? model.Skip;
+                    }
+                    else
+                    {
+                        return new ParseResult<Sieve<TResource>>(result.Errors);
+                    }
                 }
-                else if (node.StartsWith(QueryAliases.TAKE))
+                else if (node.StartsWith(QueryAliases.TAKE, StringComparison.OrdinalIgnoreCase))
                 {
-                    model.Take = ParseConst(node.Substring(QueryAliases.TAKE.Length)) ?? model.Take;
-                }
-                else
-                {
-                    throw new InvalidFilterFormatException("Invalid query alias");
+                    var result = TryParseConst(node.Substring(QueryAliases.TAKE.Length));
+                    if (result.Successful)
+                    {
+                        model.Take = result.Result ?? model.Take;
+                    }
+                    else
+                    {
+                        return new ParseResult<Sieve<TResource>>(result.Errors);
+                    }
                 }
             }
 
-            return model;
+            return new ParseResult<Sieve<TResource>>(model);
         }
 
 
@@ -99,26 +127,34 @@ namespace SieveFramework.AspNetCore.Providers
         /// <typeparam name="TResource"></typeparam>
         /// <param name="node"></param>
         /// <returns></returns>
-        private IFilterPipeline<TResource> ParseFilter<TResource>(string node)
+        private ParseResult<IFilterPipeline<TResource>> TryParseFilter<TResource>(string node)
             where TResource : class
         {
             if (string.IsNullOrEmpty(node))
             {
-                return null;
+                return new ParseResult<IFilterPipeline<TResource>>();
             }
 
             var complex = node.Split(QueryAliases.OR);
             if (complex.Length > 1)
             {
-                var subset = complex.Select(ParseFilter<TResource>).ToArray();
-                return new ComplexFilterPipeline<TResource>(ComplexFilterOperation.Or, subset);
+                var result = complex.Select(TryParseFilter<TResource>).ToArray();
+                return result.All(r => r.Successful)
+                    ? new ParseResult<IFilterPipeline<TResource>>(
+                        new ComplexFilterPipeline<TResource>(ComplexFilterOperation.Or,
+                            result.Select(r => r.Result).ToArray()))
+                    : new ParseResult<IFilterPipeline<TResource>>(result.SelectMany(r => r.Errors).ToArray());
             }
 
             var simple = node.Split(QueryAliases.AND);
             if (simple.Length > 1)
             {
-                var subset = simple.Select(ParseFilter<TResource>).ToArray();
-                return new ComplexFilterPipeline<TResource>(ComplexFilterOperation.And, subset);
+                var result = simple.Select(TryParseFilter<TResource>).ToArray();
+                return result.All(r => r.Successful)
+                    ? new ParseResult<IFilterPipeline<TResource>>(new ComplexFilterPipeline<TResource>(
+                        ComplexFilterOperation.And,
+                        result.Select(r => r.Result).ToArray()))
+                    : new ParseResult<IFilterPipeline<TResource>>(result.SelectMany(r => r.Errors).ToArray());
             }
 
             var values = node.Split(QueryAliases.NODE_DELIMITER);
@@ -129,12 +165,14 @@ namespace SieveFramework.AspNetCore.Providers
                 var value = values[2];
                 if (!QueryAliases.OperationMappings.ContainsKey(operation))
                 {
-                    throw new InvalidFilterFormatException("Not supported filter's operation", node);
+                    return new ParseResult<IFilterPipeline<TResource>>(new ParseError(
+                        "Not supported filter's operation", node));
                 }
-                return new SimpleFilterPipeline<TResource>(property, QueryAliases.OperationMappings[operation], value);
+                return new ParseResult<IFilterPipeline<TResource>>(
+                    new SimpleFilterPipeline<TResource>(property, QueryAliases.OperationMappings[operation], value));
             }
 
-            throw new InvalidFilterFormatException("Invalid filter format", node);
+            return new ParseResult<IFilterPipeline<TResource>>(new ParseError("Invalid filter format", node));
         }
 
 
@@ -144,15 +182,15 @@ namespace SieveFramework.AspNetCore.Providers
         /// <typeparam name="TResource"></typeparam>
         /// <param name="node"></param>
         /// <returns></returns>
-        private List<ISortPipeline<TResource>> ParseSort<TResource>(string node)
+        private ParseResult<List<ISortPipeline<TResource>>> TryParseSort<TResource>(string node)
             where TResource : class
         {
             if (string.IsNullOrEmpty(node))
             {
-                return new List<ISortPipeline<TResource>>(0);
+                return new ParseResult<List<ISortPipeline<TResource>>>(new List<ISortPipeline<TResource>>());
             }
 
-            return node.Split(QueryAliases.AND).Select(n =>
+            var parsed = node.Split(QueryAliases.AND).Select(n =>
             {
                 var values = n.Split(QueryAliases.NODE_DELIMITER);
                 if (values.Length == 2)
@@ -161,13 +199,17 @@ namespace SieveFramework.AspNetCore.Providers
                     var direction = values[1];
                     if (QueryAliases.SortDirectionMappings.ContainsKey(direction))
                     {
-                        return new SortPipeline<TResource>(property, QueryAliases.SortDirectionMappings[direction]);
+                        return new ParseResult<ISortPipeline<TResource>>(
+                            new SortPipeline<TResource>(property, QueryAliases.SortDirectionMappings[direction]));
                     }
-
-                    throw new InvalidFilterFormatException("Invalid sorting direction", n);
+                    return new ParseResult<ISortPipeline<TResource>>(new ParseError("Invalid sorting direction", n));
                 }
-                throw new InvalidFilterFormatException("Invalid sorting format", n);
-            }).OfType<ISortPipeline<TResource>>().ToList();
+                return new ParseResult<ISortPipeline<TResource>>(new ParseError("Invalid sorting format", n));
+            }).ToArray();
+
+            return parsed.All(r => r.Successful)
+                ? new ParseResult<List<ISortPipeline<TResource>>>(parsed.Select(r => r.Result).ToList())
+                : new ParseResult<List<ISortPipeline<TResource>>>(parsed.SelectMany(r => r.Errors).ToArray());
         }
 
 
@@ -176,18 +218,16 @@ namespace SieveFramework.AspNetCore.Providers
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
-        private int? ParseConst(string node)
+        private ParseResult<int?> TryParseConst(string node)
         {
             if (string.IsNullOrEmpty(node))
             {
-                return null;
+                return new ParseResult<int?>((int?)null);
             }
 
-            if (int.TryParse(node, out var result))
-            {
-                return result;
-            }
-            throw new InvalidFilterFormatException("Constant value must be a valid number", node);
+            return int.TryParse(node, out var result)
+                ? new ParseResult<int?>(result)
+                : new ParseResult<int?>(new ParseError("Constant value must be a valid number", node));
         }
     }
 }

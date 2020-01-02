@@ -3,13 +3,44 @@ Framework to solve issue like this one:
 > Omg, I need some filter in this API but I don't want to write abstractions because of time...
 > Ok, just accept it through constant query parameters!
 
-Framework solves cases with Filtering and Sorting (Take and Skip included). 
+Project has abstractions and implementations for Sorting, Filtering and Pagination. 
 
 Under the hood are System.Linq.Expressions.
 
 To understand how it works please check tests.
 
-(!) _Extended documentation after intergation with Swagger: [TODO]_
+**[TODO]**
+
+### Filtering
+Base structure _(further - node)_: `Property`\~`Alias`\~`Value`
+
+Alias|  Description|
+-----|  -----------|
+`eq` |  Equal to   |
+`neq`|  Not equal to|
+`gt` |  Greater than|
+`gte`|  Greater than or equal|
+`lt` |  Less than|
+`lte`|  Less than or equal|
+
+Filter nodes may be concatinates with `OR` or `AND` logic like so:
+* `node`\~and\~`node`\~and\~`node`
+* `node`\~or\~`node`\~or\~`node`
+* `node`\~and\~`node`\~or\~`node`
+
+> Filter derived firstly by `or` condition so `node`\~and\~`node`\~or\~`node` will be (`node`\~and\~`node`)\~or\~`node`.  
+> [TODO] Supports groups for filter.
+
+### Sorting
+Base structure _(further - node)_: `Property`\~`Alias`
+
+Alias|  Description|
+-----|  -----------|
+`asc`|  Sort by ascending|
+`desc`| Sort by descending|
+
+Sort nodes may be concatinates only with `AND` logic:
+* `node`\~and\~`node`
 
 # ASP.Net Core Setup
 ### Register required services
@@ -67,10 +98,34 @@ public class WeatherForecastController : ControllerBase
 }
 ```
 
+# Swagger Setup
+### Configure SwaggerGen
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    // [1] Must be registered before swagger
+    services.AddSieveProvider();
+    services.AddControllers();
+
+    services.AddSwaggerGen(builder =>
+    {
+        // [2] Add configuration for swagger 
+        services.AddSieveDescription(builder);
+        builder.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Test",
+            Version = "v1"
+        });
+    });
+}
+```
+Sieve description extends model types in swagger scheme and adds description with allowed properties for filtering and sorting.  
+**[TODO]**
+
 # Roadmap
 - [X] Basic implementations and abstractions
 - [X] Attribute model's binding  
 - [X] ASP.NET Core abstractions with request's query builder
 - [ ] ~~Supports nested models~~
-- [ ] Intergation with Swagger API docs
+- [X] Intergation with Swagger API docs
 - [ ] Cache expressions 

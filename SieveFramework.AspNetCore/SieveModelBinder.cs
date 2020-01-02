@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SieveFramework.AspNetCore.Providers;
 using System.Threading.Tasks;
+using SieveFramework.AspNetCore.Models;
 
 namespace SieveFramework.AspNetCore
 {
@@ -14,7 +15,7 @@ namespace SieveFramework.AspNetCore
         public SieveModelBinder()
         {
             _provider = new QueryProvider();
-            _parserMethod = _provider.GetType().GetMethod(nameof(QueryProvider.Parse));
+            _parserMethod = _provider.GetType().GetMethod(nameof(QueryProvider.TryParse));
         }
 
 
@@ -25,9 +26,21 @@ namespace SieveFramework.AspNetCore
             {
                 var underlying = bindingContext.ModelMetadata.UnderlyingOrModelType
                                                .GenericTypeArguments[0];
-                var value = _parserMethod.MakeGenericMethod(underlying)
+                var result = (ParseResult)_parserMethod.MakeGenericMethod(underlying)
                                          .Invoke(_provider, new object[] { query.Value.Substring(1) });
-                bindingContext.Result = ModelBindingResult.Success(value);
+                if (result.Successful)
+                {
+                    bindingContext.Result = ModelBindingResult.Success(result.Result);
+                }
+                else
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        bindingContext.ModelState.AddModelError(error.Context, error.Message);
+                    }
+
+                    bindingContext.Result = ModelBindingResult.Failed();
+                }
             }
 
             return Task.CompletedTask;

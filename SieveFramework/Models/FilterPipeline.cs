@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -64,6 +65,7 @@ namespace SieveFramework.Models
     /// <typeparam name="TValue"></typeparam>
     public class SimpleFilterPipeline<TResource, TValue> : SimpleFilterPipeline<TResource>
         where TResource : class
+        where TValue: IConvertible
     {
         /// <summary>
         /// 

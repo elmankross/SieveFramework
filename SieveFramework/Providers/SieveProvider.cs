@@ -1,5 +1,6 @@
 ﻿using SieveFramework.Predicates;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace SieveFramework.Providers
     /// <summary>
     /// 
     /// </summary>
-    public interface ISieveProvider
+    public interface ISieveProvider : IEnumerable<KeyValuePair<string, ModelProvider>>
     {
         /// <summary>
         /// Apply filter to resource
@@ -33,6 +34,17 @@ namespace SieveFramework.Providers
         public SieveProvider()
         {
             Providers = new ConcurrentDictionary<string, ModelProvider>();
+        }
+
+
+        public IEnumerator<KeyValuePair<string, ModelProvider>> GetEnumerator()
+        {
+            return Providers.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
 
