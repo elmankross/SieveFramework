@@ -1,63 +1,76 @@
 # SieveFramework
-Framework to filter and sort collections
+Framework to solve issue like this one:
+> Omg, I need some filter in this API but I don't want to write abstractions because of time...
+> Ok, just accept it through constant query parameters!
 
-# Usage  
-**SieveProvider** is a singletone to keep information about all registered models that can be filtered and sorted.  
-**ModelProvider** contains information about concrete model. What can be filtered and sorted there.  
-So, to use it needs to setup:
+Framework solves cases with Filtering and Sorting (Take and Skip included). 
 
+Under the hood are System.Linq.Expressions.
+
+To understand how it works please check tests.
+
+(!) _Extended documentation after intergation with Swagger: [TODO]_
+
+# ASP.Net Core Setup
+### Register required services
 ```csharp
-// We will construct filter to this resource
-public class TestModel
+public void ConfigureServices(IServiceCollection services)
 {
-    public int Number { get; set; }
-    public string String { get; set; }
-    public bool Boolean { get; set; }
+    // [1] Or register with autoscan by attributes
+    services.AddSieveProvider();
+
+    // [2] Or register required models by yourself
+    services.AddSieveProvider(provider =>
+    {
+        provider.AddModel<WeatherForecast>(builder =>
+        {
+            builder.CanFilter(x => x.Summary);
+            builder.CanSort(x => x.Date);
+        });
+    });
+    services.AddControllers();
 }
-
-// -----------------
-
-// create main provider
-var provider = SieveProvider();
-
-// register new model we need to process with sieve
-provider.AddModel<TestModel>(builder => {
-  // what property can be filtered
-  builder.CanFilter(model => model.Boolean);
-  // what property can be sorted
-  builder.CanSort(model => model.Number);
-});
-
-// model contains information what to do with model: filter, sort, take, skip
-var sieve = new Sieve<TestModel>
+```
+### Setup Controller
+```csharp
+public class WeatherForecastController : ControllerBase
 {
-   Filters = new List<IFilter<TestModel>>
-   {
-      new SimpleFilter<TestModel, bool>(model => model.Boolean, SimpleFilterOperation.Equal, true)
-   },
-   Sorts = new List<Sort>
-   {
-      new Sort<TestModel, int>(model => model.Number, SortDirection.Ascending)
-   }
-};
+    // [1] Accept processor through DI 
+    private readonly ISieveProvider _sieve;
 
-// what resource needs to process with sieve
-var query = new []
-{
-   new TestModel {Number = 2, Boolean = true},
-   new TestModel {Number = 3, Boolean = false},
-   new TestModel {Number = 1, Boolean = true}
-}.AsQueryable();
+    public WeatherForecastController(ISieveProvider sieve)
+    {
+        _sieve = sieve;
+    }
 
-// result of sieve processing
-var result = provider.Apply(query, sieve);
+    // [2] Wrap processed model's resource with [Sieve] - It will be maped automaticly
+    [HttpGet]
+    public ActionResult GetCustom(Sieve<WeatherForecast> model)
+    {
+        var rng = new Random();
+        var query = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        {
+            Date = DateTime.Now.AddDays(index),
+            TemperatureC = rng.Next(-20, 55),
+            Summary = "Summary" + index
+        }).AsQueryable();
 
+        // [3] Apply filter to resource
+        var result = _sieve.Apply(query, model).ToArray();
+
+        return Ok(new
+        {
+            origin = query.ToArray(),
+            result = result
+        });
+    }
+}
 ```
 
 # Roadmap
 - [X] Basic implementations and abstractions
 - [X] Attribute model's binding  
-- [ ] ASP.NET Core abstractions with request's query builder
-- [ ] Supports nested models
+- [X] ASP.NET Core abstractions with request's query builder
+- [ ] ~~Supports nested models~~
 - [ ] Intergation with Swagger API docs
 - [ ] Cache expressions 

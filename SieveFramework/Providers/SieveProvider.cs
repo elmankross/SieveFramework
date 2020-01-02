@@ -1,9 +1,8 @@
-﻿using System;
+﻿using SieveFramework.Predicates;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using SieveFramework.Models;
-using SieveFramework.Predicates;
 
 namespace SieveFramework.Providers
 {
@@ -17,9 +16,9 @@ namespace SieveFramework.Providers
         /// </summary>
         /// <typeparam name="TResource"></typeparam>
         /// <param name="query"></param>
-        /// <param name="sieve"></param>
+        /// <param name="predicates"></param>
         /// <returns></returns>
-        IQueryable<TResource> Apply<TResource>(IQueryable<TResource> query, Sieve<TResource> sieve)
+        IQueryable<TResource> Apply<TResource>(IQueryable<TResource> query, IReadOnlyList<IPredicate<TResource>> predicates)
             where TResource : class;
     }
 
@@ -71,25 +70,16 @@ namespace SieveFramework.Providers
         /// </summary>
         /// <typeparam name="TResource"></typeparam>
         /// <param name="query"></param>
-        /// <param name="sieve"></param>
-        /// <returns></returns>
-        public IQueryable<TResource> Apply<TResource>(IQueryable<TResource> query, Sieve<TResource> sieve)
-            where TResource : class
-        {
-            return Apply(query, sieve.GetPredicates());
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TResource"></typeparam>
-        /// <param name="query"></param>
         /// <param name="predicates"></param>
         /// <returns></returns>
         public IQueryable<TResource> Apply<TResource>(IQueryable<TResource> query, IReadOnlyList<IPredicate<TResource>> predicates)
             where TResource : class
         {
+            if (predicates == null)
+            {
+                return query;
+            }
+
             if (!Providers.TryGetValue(typeof(TResource).Name, out var provider))
             {
                 throw new ArgumentException("Cannot filter selected resource. Provider was not registered");

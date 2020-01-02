@@ -1,9 +1,10 @@
-﻿using SieveFramework.Exceptions;
-using SieveFramework.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using SieveFramework.AspNetCore.Models;
+using SieveFramework.Exceptions;
+using SieveFramework.Models;
 
-namespace SieveFramework.Providers
+namespace SieveFramework.AspNetCore.Providers
 {
     /// <summary>
     /// 

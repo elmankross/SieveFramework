@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SieveFramework.AspNetCore.Models;
 using SieveFramework.Models;
 using SieveFramework.Predicates;
 using SieveFramework.Providers;

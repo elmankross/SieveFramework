@@ -17,7 +17,9 @@ namespace SieveFramework.AspNetCore.Extensions
         /// <returns></returns>
         public static IServiceCollection AddSieveProvider(this IServiceCollection services, params Assembly[] assemblies)
         {
-            services.AddSingleton(_ => new SieveConfiguratorProvider(assemblies));
+            services.AddSingleton(_ => assemblies.Length > 0
+                ? new SieveConfiguratorProvider(assemblies)
+                : new SieveConfiguratorProvider());
             services.AddSingleton<ISieveProvider, SieveProvider>(s =>
             {
                 var provider = new SieveProvider();
