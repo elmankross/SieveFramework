@@ -11,12 +11,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SieveFramework.AspNetCore",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EF46D97-1EE7-4631-A4B4-C41F74A63704}"
 	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
+		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SieveFramework.AspNetCore.Swashbuckle", "SieveFramework.AspNetCore.Swashbuckle\SieveFramework.AspNetCore.Swashbuckle.csproj", "{C7E19FDF-F518-41F8-A667-E94C3C83A887}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebTest", "WebTest\WebTest.csproj", "{35339E69-1905-477B-B2F3-001C090840D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SieveFramework.AspNetCore.Swashbuckle", "SieveFramework.AspNetCore.Swashbuckle\SieveFramework.AspNetCore.Swashbuckle.csproj", "{C7E19FDF-F518-41F8-A667-E94C3C83A887}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,10 +38,6 @@ Global
 		{C7E19FDF-F518-41F8-A667-E94C3C83A887}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7E19FDF-F518-41F8-A667-E94C3C83A887}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7E19FDF-F518-41F8-A667-E94C3C83A887}.Release|Any CPU.Build.0 = Release|Any CPU
-		{35339E69-1905-477B-B2F3-001C090840D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{35339E69-1905-477B-B2F3-001C090840D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{35339E69-1905-477B-B2F3-001C090840D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{35339E69-1905-477B-B2F3-001C090840D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

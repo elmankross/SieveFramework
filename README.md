@@ -1,49 +1,97 @@
-# SieveFramework
-Framework to solve issue like this one:
-> Omg, I need some filter in this API but I don't want to write abstractions because of time...
-> Ok, just accept it through constant query parameters!
+<div>
+    <img src="img/sieve.png" style="width:30%;float:left;"></img>
+    <h1 style="width:65%;float:right;margin-top:10%;margin-left:5%">SieveFramework</h1>
+</div>
 
-Project has abstractions and implementations for Sorting, Filtering and Pagination. 
+**[Filtering](#filtering)** |
+**[Sorting](#sorting)** |
+**[Swagger](#swagger)**
 
-Under the hood are System.Linq.Expressions.
+# Goal & Description
 
-To understand how it works please check tests.
+SieveFramework is a hight customizable framework that helps to easier integrate Filters, Sorts and Pagination to your project with enough abstraction's level.
+Under the hood is `System.Linq.Expressions` helps to achieve any operations with collections and get native support for querying. 
 
-**[TODO]**
+Project|                                       Description|
+-------|                                       -----------|
+`SieveFramework`|                            Core project with base functionality|
+`SieveFramework.AspNetCore`|                Required dependencies to integrate sieve to ASP.Net Core projects|
+`SieveFramework.AspNetCore.Swashbuckle`|   Required dependencies to integrate sieve with Swagger framework|
 
-### Filtering
-Base structure _(further - node)_: `Property`\~`Alias`\~`Value`
+### Design
 
-Alias|  Description|
------|  -----------|
-`eq` |  Equal to   |
-`neq`|  Not equal to|
-`gt` |  Greater than|
-`gte`|  Greater than or equal|
-`lt` |  Less than|
-`lte`|  Less than or equal|
+The main provider is `SieveProvider`. It just contains a collection of `ModelProvider` that keeps the information about a concrete model:
+  * which properties can be sorted
+  * which properties can be filtered
+  * what a type of a model
+  * any meta information
 
-Filter nodes may be concatinates with `OR` or `AND` logic like so:
-* `node`\~and\~`node`\~and\~`node`
-* `node`\~or\~`node`\~or\~`node`
-* `node`\~and\~`node`\~or\~`node`
+The main provider works with predicates - collections of actions under a queryable resource. Each predicate can do only one type of query's action under resource:
+  * FilterPredicate - Where()
+  * SortPredicate - OrderBy(), OrderByDesc()
+  * TakePredicate - Take()
+  * SkipPredicate - Skip()
+  * [any]
 
-> Filter derived firstly by `or` condition so `node`\~and\~`node`\~or\~`node` will be (`node`\~and\~`node`)\~or\~`node`.  
-> [TODO] Supports groups for filter.
+This design helps to delegate the same type of operations to one executor and controls a direction of operations in the pipeline.
 
-### Sorting
-Base structure _(further - node)_: `Property`\~`Alias`
+# ASP.Net Core
 
-Alias|  Description|
------|  -----------|
-`asc`|  Sort by ascending|
-`desc`| Sort by descending|
+### Querying
+> Filter's format presented by parsers and used to bind from query request using a custom model binder.  
+> [!] Data from the request's body will bound with native ASP.Net model binders.
 
-Sort nodes may be concatinates only with `AND` logic:
-* `node`\~and\~`node`
+Configuration of default native parser:
 
-# ASP.Net Core Setup
-### Register required services
+Alias|          Description|
+-----|          -----------|
+`~`|           `NODE_DELIMITER` - used to split values inside node|
+`&`|           `OPERATION_DELIMITER` - used to split different operations (default query splitter)|
+`filter=`|    `FILTER` - query parameter contains filter|
+`sort=`|      `SORT` - query parameter contains sorts|
+`take=`|      `TAKE` - query parameter contains selection size|
+`skip=`|      `SKIP` - query parameter contains selection size|
+
+> Planned feature is [DeepObject](https://swagger.io/docs/specification/serialization/#query) swagger format to deserialize model to query.
+
+#### Filtering
+
+##### Simple
+Structure: `Property` `NODE_DELIMITER` `Alias` `NODE_DELIMITER` `Value`
+
+Alias (Native)|     Alias (DeepObject)|  Description|
+---------------|    ------------------|  -----------|
+`eq` |              TODO|                Equal to   |
+`neq`|              TODO|                Not equal to|
+`gt` |              TODO|                Greater than|
+`gte`|              TODO|                Greater than or equal|
+`lt` |              TODO|                Less than|
+`lte`|              TODO|                Less than or equal|
+
+##### Complex
+Structure: `Filter` `NODE_DELIMITER` `Alias` `NODE_DELIMITER` `Filter`
+
+Alias (Native)|     Alias (DeepObject)|     Description|
+--------------|     ------------------|     ------------|
+`and`         |     TODO|                   Concatenates filters by _and_ logic|
+`or`          |     TODO|                   Concatenates filters by _or_ logic|
+
+> Filter derived firstly by `or` condition so `node`\~`and`\~`node`\~`or`\~`node` will be (`node`\~`and`\~`node`)\~`or`\~`node`.  
+
+#### Sorting
+Structure: `Property` `NODE_DELIMITER` `Alias`
+
+Alias (Native)|  Alias (DeepObject)|    Description|
+--------------|  ------------------|    -----------|
+`asc`|          TODO|                   Sort by ascending|
+`desc`|         TODO|                   Sort by descending|
+
+> Sort nodes may be concatenates only with `and` logic:
+> * `node`\~`and`\~`node`
+
+### Configuration
+
+#### Register required services
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
@@ -66,7 +114,7 @@ public void ConfigureServices(IServiceCollection services)
     services.AddControllers();
 }
 ```
-### Setup Controller
+#### Setup Controller
 ```csharp
 public class WeatherForecastController : ControllerBase
 {
@@ -102,7 +150,7 @@ public class WeatherForecastController : ControllerBase
 }
 ```
 
-# Swagger Setup
+# Swagger
 ### Configure SwaggerGen
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -123,8 +171,8 @@ public void ConfigureServices(IServiceCollection services)
     });
 }
 ```
-Sieve description extends model types in swagger scheme and adds description with allowed properties for filtering and sorting.  
-**[TODO]**
+Sieve descriptions fill up swagger scheme with strong typed sieve's model and list of allowed to sorting and filtering properties for each API action.
+
 
 # Roadmap
 - [X] Basic implementations and abstractions
@@ -132,4 +180,9 @@ Sieve description extends model types in swagger scheme and adds description wit
 - [X] ASP.NET Core abstractions with request's query builder
 - [ ] ~~Supports nested models~~
 - [X] Intergation with Swagger API docs
+- [ ] DeepObject serialization for swagger
+- [ ] Complex filters groups
 - [ ] Cache expressions 
+
+# License
+<div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
