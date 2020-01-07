@@ -167,6 +167,52 @@ namespace SieveFrameworkTests
 
 
         [Fact]
+        public void Sort__WithMultipleProperties__ShouldBeOk()
+        {
+            var provider = new SieveProvider()
+               .AddModel<SimpleTestModel>(builder =>
+                {
+                    builder.CanSort(x => x.Boolean);
+                    builder.CanSort(x => x.Number);
+                });
+            var query = new[]
+            {
+                new SimpleTestModel {Number = 1, Boolean = true},
+                new SimpleTestModel {Number = 3, Boolean = false},
+                new SimpleTestModel {Number = 1, Boolean = false},
+                new SimpleTestModel {Number = 2, Boolean = true},
+            }.AsQueryable();
+            var sortPredicate = new SortPredicate<SimpleTestModel>(
+                new SortPipeline<SimpleTestModel, int>(model => model.Number, SortDirection.Ascending),
+                new SortPipeline<SimpleTestModel, bool>(model => model.Boolean, SortDirection.Descending));
+
+            var result = provider.Apply(query, new[] { sortPredicate }).ToArray();
+
+            Assert.Collection(result,
+                r =>
+                {
+                    Assert.Equal(1, r.Number);
+                    Assert.True(r.Boolean);
+                },
+                r =>
+                {
+                    Assert.Equal(1, r.Number);
+                    Assert.False(r.Boolean);
+                },
+                r =>
+                {
+                    Assert.Equal(2, r.Number);
+                    Assert.True(r.Boolean);
+                },
+                r =>
+                {
+                    Assert.Equal(3, r.Number);
+                    Assert.False(r.Boolean);
+                });
+        }
+
+
+        [Fact]
         public void Sieve__WithAllowedProperties__ShouldBeOk()
         {
             var provider = new SieveProvider()

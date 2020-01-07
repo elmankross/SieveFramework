@@ -1,4 +1,5 @@
 ﻿using Microsoft.OpenApi.Models;
+using SieveFramework.AspNetCore.Parsers;
 using SieveFramework.Providers;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Linq;
@@ -7,11 +8,13 @@ namespace SieveFramework.AspNetCore.Swashbuckle.Filters
 {
     public class SieveOperationFilter : IOperationFilter
     {
+        private readonly SieveScheme<IParser> _scheme;
         private readonly ISieveProvider _provider;
 
-        public SieveOperationFilter(ISieveProvider provider)
+        public SieveOperationFilter(ISieveProvider provider, IParser parser)
         {
             _provider = provider;
+            _scheme = new SieveScheme<IParser>(parser);
         }
 
 
@@ -23,7 +26,7 @@ namespace SieveFramework.AspNetCore.Swashbuckle.Filters
             foreach (var parameter in parameters)
             {
                 context.SchemaRepository.Schemas.Remove(parameter.Key);
-                foreach (var sieveReference in SieveSchema.References)
+                foreach (var sieveReference in _scheme.References)
                 {
                     context.SchemaRepository.Schemas.TryAdd(sieveReference.Key, sieveReference.Value);
                 }
@@ -33,7 +36,7 @@ namespace SieveFramework.AspNetCore.Swashbuckle.Filters
             {
                 if (parameters.ContainsKey(parameter.Schema.Items.Reference.Id))
                 {
-                    parameter.Schema.Reference = SieveSchema.InstanceReference;
+                    parameter.Schema.Reference = SieveScheme<IParser>.InstanceReference;
                     parameter.Schema.Items = null;
 
                     var model = context.ApiDescription.ParameterDescriptions.Single(d => d.Name == parameter.Name);

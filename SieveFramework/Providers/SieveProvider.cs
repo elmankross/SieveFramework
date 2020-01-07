@@ -4,7 +4,10 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("SieveFramework.AspNetCore", AllInternalsVisible = true)]
+[assembly: InternalsVisibleTo("SieveFrameworkTests", AllInternalsVisible = true)]
 namespace SieveFramework.Providers
 {
     /// <summary>
@@ -31,7 +34,7 @@ namespace SieveFramework.Providers
     {
         internal ConcurrentDictionary<string, ModelProvider> Providers { get; }
 
-        public SieveProvider()
+        internal SieveProvider()
         {
             Providers = new ConcurrentDictionary<string, ModelProvider>();
         }
@@ -115,7 +118,8 @@ namespace SieveFramework.Providers
         {
             if (!Providers.TryAdd(provider.Target.Type.Name, provider))
             {
-                throw new Exception("Can't add new provider. It seems this provider already added");
+                throw new Exception("Can't add new provider. It seems this provider already exists. "
+                                  + "It may be previous registration through model's attributes.");
             }
 
             return this;

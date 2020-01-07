@@ -1,15 +1,15 @@
 ﻿using System;
-using SieveFramework.AspNetCore.Models;
-using SieveFramework.Models;
 using System.Collections.Generic;
 using System.Linq;
+using SieveFramework.AspNetCore.Models;
+using SieveFramework.Models;
 
-namespace SieveFramework.AspNetCore.Providers
+namespace SieveFramework.AspNetCore.Parsers
 {
     /// <summary>
     /// 
     /// </summary>
-    public class QueryAliases
+    public class NativeQueryParser : IParser
     {
         public const string NODE_DELIMITER = "~";
         public const string OPERATION_DELIMITER = "&";
@@ -32,29 +32,35 @@ namespace SieveFramework.AspNetCore.Providers
         public const string LESS_THAN_OR_EQUAL = "lte";
 
 
-        public static Dictionary<string, SimpleFilterOperation> OperationMappings = new Dictionary<string, SimpleFilterOperation>
-        {
-            [EQUAL] = SimpleFilterOperation.Equal,
-            [NOT_EQUAL] = SimpleFilterOperation.NotEqual,
-            [GREATER_THAN] = SimpleFilterOperation.Greater,
-            [GREATER_THAN_OR_EQUAL] = SimpleFilterOperation.GreaterOrEqual,
-            [LESS_THAN] = SimpleFilterOperation.Less,
-            [LESS_THAN_OR_EQUAL] = SimpleFilterOperation.LessOrEqual
-        };
+        /// <inheritdoc />
+        public Dictionary<string, SimpleFilterOperation> SimpleOperationsMapping { get; } =
+            new Dictionary<string, SimpleFilterOperation>
+            {
+                [EQUAL] = SimpleFilterOperation.Equal,
+                [NOT_EQUAL] = SimpleFilterOperation.NotEqual,
+                [GREATER_THAN] = SimpleFilterOperation.Greater,
+                [GREATER_THAN_OR_EQUAL] = SimpleFilterOperation.GreaterOrEqual,
+                [LESS_THAN] = SimpleFilterOperation.Less,
+                [LESS_THAN_OR_EQUAL] = SimpleFilterOperation.LessOrEqual
+            };
 
-        public static Dictionary<string, SortDirection> SortDirectionMappings = new Dictionary<string, SortDirection>
+        /// <inheritdoc />
+        public Dictionary<string, ComplexFilterOperation> ComplexOperationsMapping { get; } =
+            new Dictionary<string, ComplexFilterOperation>
+            {
+                [AND] = ComplexFilterOperation.And,
+                [OR] = ComplexFilterOperation.Or
+            };
+
+
+        /// <inheritdoc />
+        public Dictionary<string, SortDirection> SortDirectionsMapping { get; } = new Dictionary<string, SortDirection>
         {
             [ASC] = SortDirection.Ascending,
             [DESC] = SortDirection.Descending
         };
-    }
 
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public class QueryProvider
-    {
         /// <summary>
         /// 
         /// </summary>
@@ -65,11 +71,11 @@ namespace SieveFramework.AspNetCore.Providers
             where TResource : class
         {
             var model = new Sieve<TResource>();
-            foreach (var node in query.Split(QueryAliases.OPERATION_DELIMITER))
+            foreach (var node in query.Split(OPERATION_DELIMITER))
             {
-                if (node.StartsWith(QueryAliases.FILTER, StringComparison.OrdinalIgnoreCase))
+                if (node.StartsWith(FILTER, StringComparison.OrdinalIgnoreCase))
                 {
-                    var result = TryParseFilter<TResource>(node.Substring(QueryAliases.FILTER.Length));
+                    var result = TryParseFilter<TResource>(node.Substring(FILTER.Length));
                     if (result.Successful)
                     {
                         model.Filter = result.Result;
@@ -79,9 +85,9 @@ namespace SieveFramework.AspNetCore.Providers
                         return new ParseResult<Sieve<TResource>>(result.Errors);
                     }
                 }
-                else if (node.StartsWith(QueryAliases.SORT, StringComparison.OrdinalIgnoreCase))
+                else if (node.StartsWith(SORT, StringComparison.OrdinalIgnoreCase))
                 {
-                    var result = TryParseSort<TResource>(node.Substring(QueryAliases.SORT.Length));
+                    var result = TryParseSort<TResource>(node.Substring(SORT.Length));
                     if (result.Successful)
                     {
                         model.Sort = result.Result;
@@ -91,9 +97,9 @@ namespace SieveFramework.AspNetCore.Providers
                         return new ParseResult<Sieve<TResource>>(result.Errors);
                     }
                 }
-                else if (node.StartsWith(QueryAliases.SKIP, StringComparison.OrdinalIgnoreCase))
+                else if (node.StartsWith(SKIP, StringComparison.OrdinalIgnoreCase))
                 {
-                    var result = TryParseConst(node.Substring(QueryAliases.SKIP.Length));
+                    var result = TryParseConst(node.Substring(SKIP.Length));
                     if (result.Successful)
                     {
                         model.Skip = result.Result ?? model.Skip;
@@ -103,9 +109,9 @@ namespace SieveFramework.AspNetCore.Providers
                         return new ParseResult<Sieve<TResource>>(result.Errors);
                     }
                 }
-                else if (node.StartsWith(QueryAliases.TAKE, StringComparison.OrdinalIgnoreCase))
+                else if (node.StartsWith(TAKE, StringComparison.OrdinalIgnoreCase))
                 {
-                    var result = TryParseConst(node.Substring(QueryAliases.TAKE.Length));
+                    var result = TryParseConst(node.Substring(TAKE.Length));
                     if (result.Successful)
                     {
                         model.Take = result.Result ?? model.Take;
@@ -135,41 +141,33 @@ namespace SieveFramework.AspNetCore.Providers
                 return new ParseResult<IFilterPipeline<TResource>>();
             }
 
-            var complex = node.Split(QueryAliases.OR);
-            if (complex.Length > 1)
+            foreach (var operation in ComplexOperationsMapping)
             {
-                var result = complex.Select(TryParseFilter<TResource>).ToArray();
-                return result.All(r => r.Successful)
-                    ? new ParseResult<IFilterPipeline<TResource>>(
-                        new ComplexFilterPipeline<TResource>(ComplexFilterOperation.Or,
+                var nodes = node.Split(operation.Key);
+                if (nodes.Length > 1)
+                {
+                    var result = nodes.Select(TryParseFilter<TResource>).ToArray();
+                    return result.All(r => r.Successful)
+                        ? new ParseResult<IFilterPipeline<TResource>>(new ComplexFilterPipeline<TResource>(
+                            operation.Value,
                             result.Select(r => r.Result).ToArray()))
-                    : new ParseResult<IFilterPipeline<TResource>>(result.SelectMany(r => r.Errors).ToArray());
+                        : new ParseResult<IFilterPipeline<TResource>>(result.SelectMany(r => r.Errors).ToArray());
+                }
             }
 
-            var simple = node.Split(QueryAliases.AND);
-            if (simple.Length > 1)
-            {
-                var result = simple.Select(TryParseFilter<TResource>).ToArray();
-                return result.All(r => r.Successful)
-                    ? new ParseResult<IFilterPipeline<TResource>>(new ComplexFilterPipeline<TResource>(
-                        ComplexFilterOperation.And,
-                        result.Select(r => r.Result).ToArray()))
-                    : new ParseResult<IFilterPipeline<TResource>>(result.SelectMany(r => r.Errors).ToArray());
-            }
-
-            var values = node.Split(QueryAliases.NODE_DELIMITER);
+            var values = node.Split(NODE_DELIMITER);
             if (values.Length == 3)
             {
                 var property = values[0];
                 var operation = values[1];
                 var value = values[2];
-                if (!QueryAliases.OperationMappings.ContainsKey(operation))
+                if (!SimpleOperationsMapping.ContainsKey(operation))
                 {
                     return new ParseResult<IFilterPipeline<TResource>>(new ParseError(
                         "Not supported filter's operation", node));
                 }
                 return new ParseResult<IFilterPipeline<TResource>>(
-                    new SimpleFilterPipeline<TResource>(property, QueryAliases.OperationMappings[operation], value));
+                    new SimpleFilterPipeline<TResource>(property, SimpleOperationsMapping[operation], value));
             }
 
             return new ParseResult<IFilterPipeline<TResource>>(new ParseError("Invalid filter format", node));
@@ -190,17 +188,17 @@ namespace SieveFramework.AspNetCore.Providers
                 return new ParseResult<List<ISortPipeline<TResource>>>(new List<ISortPipeline<TResource>>());
             }
 
-            var parsed = node.Split(QueryAliases.AND).Select(n =>
+            var parsed = node.Split(AND).Select(n =>
             {
-                var values = n.Split(QueryAliases.NODE_DELIMITER);
+                var values = n.Split(NODE_DELIMITER);
                 if (values.Length == 2)
                 {
                     var property = values[0];
                     var direction = values[1];
-                    if (QueryAliases.SortDirectionMappings.ContainsKey(direction))
+                    if (SortDirectionsMapping.ContainsKey(direction))
                     {
                         return new ParseResult<ISortPipeline<TResource>>(
-                            new SortPipeline<TResource>(property, QueryAliases.SortDirectionMappings[direction]));
+                            new SortPipeline<TResource>(property, SortDirectionsMapping[direction]));
                     }
                     return new ParseResult<ISortPipeline<TResource>>(new ParseError("Invalid sorting direction", n));
                 }

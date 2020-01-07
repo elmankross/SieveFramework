@@ -19,15 +19,28 @@ namespace SieveFramework.Predicates
 
         public IQueryable<TResource> Apply(ModelProvider provider, IQueryable<TResource> query)
         {
-            foreach (var sort in _sorts)
+            for (var i = 0; i < _sorts.Length; i++)
             {
+                var sort = _sorts[i];
                 if (provider.TrySort(sort.Property, out var property))
                 {
                     var lambda = sort.Apply(provider.Target, _ => null);
-                    var method = sort.Direction == SortDirection.Ascending
-                        ? nameof(Queryable.OrderBy)
-                        : nameof(Queryable.OrderByDescending);
-                    var exp = Expression.Call(typeof(Queryable), method, new[] { provider.Target.Type, property.PropertyType },
+                    string method;
+                    if (i == 0)
+                    {
+                        method = sort.Direction == SortDirection.Ascending
+                            ? nameof(Queryable.OrderBy)
+                            : nameof(Queryable.OrderByDescending);
+                    }
+                    else
+                    {
+                        method = sort.Direction == SortDirection.Ascending
+                            ? nameof(Queryable.ThenBy)
+                            : nameof(Queryable.ThenByDescending);
+                    }
+
+                    var exp = Expression.Call(typeof(Queryable), method,
+                        new[] { provider.Target.Type, property.PropertyType },
                         query.Expression, lambda);
                     query = query.Provider.CreateQuery<TResource>(exp);
                 }

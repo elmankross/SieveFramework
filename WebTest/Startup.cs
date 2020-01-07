@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using SieveFramework.AspNetCore.Extensions;
+using SieveFramework.AspNetCore.Parsers;
 using SieveFramework.AspNetCore.Swashbuckle.Extensions;
 
 namespace WebTest
@@ -23,6 +24,7 @@ namespace WebTest
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSieveProvider();
+
             services.AddControllers();
 
             services.AddSwaggerGen(builder =>

@@ -47,17 +47,21 @@ Sort nodes may be concatinates only with `AND` logic:
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-    // [1] Or register with autoscan by attributes
-    services.AddSieveProvider();
-
-    // [2] Or register required models by yourself
-    services.AddSieveProvider(provider =>
+    services.AddSieveProvider(config =>
     {
-        provider.AddModel<WeatherForecast>(builder =>
-        {
-            builder.CanFilter(x => x.Summary);
-            builder.CanSort(x => x.Date);
-        });
+        // WithParser - Add custom Query parser. [NativeQueryParser] is default, no need to register them it's just an example
+        config.WithParser<NativeQueryParser>()
+        // ForAssemblies - Add assemblies to scan models by attributes [CanSort / CanFilter]
+              .ForAssemblies(...)
+        // Fluent models registration
+              .ConfigureProvider(provider =>
+              {
+                  provider.AddModel<TestModel>(builder =>
+                  {
+                      builder.CanSort(p => p.TestProperty);
+                      builder.CanFilter(p => p.TestProperty);
+                  });
+              });
     });
     services.AddControllers();
 }

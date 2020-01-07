@@ -1,4 +1,4 @@
-﻿using SieveFramework.AspNetCore.Providers;
+﻿using SieveFramework.AspNetCore.Parsers;
 using SieveFramework.Models;
 using SieveFrameworkTests.Models;
 using Xunit;
@@ -7,11 +7,11 @@ namespace SieveFrameworkTests
 {
     public class QueryProviderTests
     {
-        private readonly QueryProvider _provider;
+        private readonly IParser _provider;
 
         public QueryProviderTests()
         {
-            _provider = new QueryProvider();
+            _provider = new NativeQueryParser();
         }
 
 

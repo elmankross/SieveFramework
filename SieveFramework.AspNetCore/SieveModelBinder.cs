@@ -1,21 +1,20 @@
-﻿using System;
-using System.Reflection;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using SieveFramework.AspNetCore.Providers;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SieveFramework.AspNetCore.Models;
+using SieveFramework.AspNetCore.Parsers;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SieveFramework.AspNetCore
 {
     public class SieveModelBinder : IModelBinder
     {
-        private readonly QueryProvider _provider;
+        private readonly IParser _parser;
         private readonly MethodInfo _parserMethod;
 
-        public SieveModelBinder()
+        public SieveModelBinder(IParser parser)
         {
-            _provider = new QueryProvider();
-            _parserMethod = _provider.GetType().GetMethod(nameof(QueryProvider.TryParse));
+            _parser = parser;
+            _parserMethod = parser.GetType().GetMethod(nameof(IParser.TryParse));
         }
 
 
@@ -27,7 +26,7 @@ namespace SieveFramework.AspNetCore
                 var underlying = bindingContext.ModelMetadata.UnderlyingOrModelType
                                                .GenericTypeArguments[0];
                 var result = (ParseResult)_parserMethod.MakeGenericMethod(underlying)
-                                         .Invoke(_provider, new object[] { query.Value.Substring(1) });
+                                         .Invoke(_parser, new object[] { query.Value.Substring(1) });
                 if (result.Successful)
                 {
                     bindingContext.Result = ModelBindingResult.Success(result.Result);

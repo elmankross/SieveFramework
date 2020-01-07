@@ -7,7 +7,7 @@ namespace SieveFramework.AspNetCore.Models
         public new TResource Result { get; }
 
         [Obsolete("hack")]
-        public ParseResult(bool isSuccess = true)
+        internal ParseResult(bool isSuccess = true)
         {
             Successful = isSuccess;
         }
@@ -32,7 +32,7 @@ namespace SieveFramework.AspNetCore.Models
         public ParseError[] Errors { get; }
 
 
-        public ParseResult(object result)
+        internal ParseResult(object result)
         {
             Result = result;
             Successful = true;
@@ -40,7 +40,7 @@ namespace SieveFramework.AspNetCore.Models
         }
 
 
-        public ParseResult(params ParseError[] errors)
+        internal ParseResult(params ParseError[] errors)
         {
             Errors = errors;
             Successful = false;
