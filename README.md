@@ -1,7 +1,4 @@
-<div>
-    <img src="img/sieve.png" style="width:30%;float:left;"></img>
-    <h1 style="width:65%;float:right;margin-top:10%;margin-left:5%">SieveFramework</h1>
-</div>
+# ![SieveFramework](img/sieve.png) SieveFramework
 
 **[Filtering](#filtering)** |
 **[Sorting](#sorting)** |
