@@ -47,7 +47,7 @@ Alias|          Description|
 `filter=`|    `FILTER` - query parameter contains filter|
 `sort=`|      `SORT` - query parameter contains sorts|
 `take=`|      `TAKE` - query parameter contains selection size|
-`skip=`|      `SKIP` - query parameter contains selection size|
+`skip=`|      `SKIP` - query parameter contains skip size|
 
 > Planned feature is [DeepObject](https://swagger.io/docs/specification/serialization/#query) swagger format to deserialize model to query.
 
